@@ -16,5 +16,7 @@ resource "google_compute_instance" "development_environment" {
   }
   network_interface {
     network = "default"
+    access_config {
+    }
   }
 }
