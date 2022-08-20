@@ -1,0 +1,78 @@
+---
+# PLAY PARA CONFIGURACAO DA WORKSPACE
+- name: Configurando a Workspace
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Ajustando Timezone
+      timezone:
+        name: America/Sao_Paulo
+
+    - name: Adicionando Key do Repositorio do GCLOUD
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Adicionando o Repositório do GCLOUD
+      apt_repository:
+        repo: "deb http://packages.cloud.google.com/apt cloud-sdk main"
+        update_cache: no
+
+    - name: Adicionando Key do Repositorio do Terraform
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg 
+        state: present
+
+    - name: Adicionando o Repositório do Terraform
+      apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main" 
+        update_cache: yes
+
+    - name: Adicionando o Repositório do Git
+      apt_repository:
+        repo: 'ppa:git-core/ppa'
+        update_cache: no
+
+    - name: Adicionando Key do Repositorio do Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Adicionando o Repositório do Docker
+      apt_repository:
+        repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        update_cache: yes
+
+    - name: Instalação do GCLOUD, Terraform, Docker e outras dependências
+      apt:
+        pkg: ['google-cloud-sdk','unzip', 'docker-ce', 'build-essential', 'virtualenv', 'zlib1g-dev', 'libssl-dev', 'libncurses-dev', 'libffi-dev', 'libsqlite3-dev', 'libreadline-dev', 'libbz2-dev', 'ruby']
+        state: present
+
+    - name: Manter sempre a última versão do Git e Terraform 
+      apt:
+         pkg: ['git','terraform'] 
+         state: latest
+
+    ############# Setup do Ambiente de Desenvolvimento Python
+    - name: Instalação do Pip Python
+      apt:
+        pkg: ['python3-pip']
+        state: present
+
+    - name: Install virtualenv
+      pip:
+        name: 
+          - virtualenv
+          - virtualenvwrapper
+
+    - name: Setup do Virtualenv
+      lineinfile:
+        dest: /home/packer/.bashrc
+        line: "{{ item.line }}"
+      loop:
+        - { line: '#Virtualenvwrapper settings:'}
+        - { line: 'export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3'}
+        - { line: 'export WORKON_HOME=$HOME/.virtualenv'}
+        - { line: 'export VIRTUALENVWRAPPER_VIRTUALENV=/usr/bin/virtualenv'}
+        - { line: 'source /usr/local/bin/virtualenvwrapper.sh'}
